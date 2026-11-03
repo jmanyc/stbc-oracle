@@ -112,6 +112,9 @@ def _read_inputs():
     P["warp_time"]    = _getf("warp_time", 5.0)         # WarpSequence duration for set-to-set
     P["warp_dest"]    = _gets("warp_dest", "Systems.Vesuvi.Vesuvi5")  # module name, or "none" = warp out
     P["warp_clear"]   = _getf("warp_clear", 0.0)      # >0: before a set-to-set warp move the target this far off the streak line (+X)
+    P["sub_preset"]   = _gets("sub_preset", "none")      # "Hull=0.5;Sensor_Array=0.5": target subsystem condition fractions at act time ("_" = space)
+    P["repair_power"] = _getf("repair_power", -1.0)     # target RepairSubsystem.SetPowerPercentageWanted at act time
+    P["repair_enqueue"] = int(_getf("repair_enqueue", 0))  # 1 = AddToRepairList every sub_preset subsystem after setting it
     for k in P.keys():
         _log.meta("in_" + k, P[k])
 
@@ -383,6 +386,25 @@ def _record_meta():
         _log.meta("target_max_shields", _fmt_list(mx, "%.0f"))
     try:
         _log.meta("target_hull_max", g_pTarget.GetHull().GetMaxCondition())
+    except:
+        pass
+    try:
+        rep = g_pTarget.GetRepairSubsystem()
+        rp = rep.GetProperty()
+        _log.meta("target_repair", "name=%s teams=%d maxpts=%.1f cond=%.1f/%.1f pw=%.3f pp=%.3f on=%d" % (
+            rep.GetName(), rp.GetNumRepairTeams(), rp.GetMaxRepairPoints(),
+            rep.GetCondition(), rep.GetMaxCondition(),
+            rep.GetPowerPercentageWanted(), rep.GetPowerPercentage(), rep.IsOn()))
+    except:
+        _log.meta("target_repair", "err " + _log.exc())
+    try:
+        out = []
+        for s in g_subs:
+            try:
+                out.append(s.GetProperty().GetRepairComplexity())
+            except:
+                out.append(-1.0)
+        _log.meta("target_repair_cx", _fmt_list(out, "%.0f"))
     except:
         pass
     # Subsystem catalogue: name|max|radius|pos, one meta per subsystem.
@@ -786,6 +808,45 @@ def _act_ammoswitch():
     except:
         _log.mark("ammo_switch_error", _log.exc())
     _log.mark("ammo_after", _tubes_state())
+
+def _preset_subsystems():
+    """sub_preset / repair_power / repair_enqueue: damage named target
+    subsystems by SetCondition (no hit), so the repair path is all that moves them."""
+    rep = None
+    try:
+        rep = g_pTarget.GetRepairSubsystem()
+    except:
+        _log.mark("repair_get_error", _log.exc())
+    if P["repair_power"] >= 0.0 and rep is not None:
+        try:
+            rep.SetPowerPercentageWanted(P["repair_power"])
+        except:
+            _log.mark("repair_power_error", _log.exc())
+    if P["sub_preset"] == "none":
+        return
+    for item in string.split(P["sub_preset"], ";"):
+        if string.find(item, "=") < 0:
+            continue
+        nm, frac = string.split(item, "=")
+        nm = string.replace(nm, "_", " ")
+        hit = None
+        for s in g_subs:
+            if s.GetName() == nm:
+                hit = s
+                break
+        if hit is None:
+            _log.mark("preset_missing", nm)
+            continue
+        try:
+            hit.SetCondition(hit.GetMaxCondition() * float(frac))
+            q = -1
+            if P["repair_enqueue"] and rep is not None:
+                rep.AddToRepairList(hit)
+            if rep is not None:
+                q = rep.IsBeingRepaired(hit)
+            _log.mark("preset_" + string.replace(nm, " ", "_"), "cond=%.1f queued=%d" % (hit.GetCondition(), q))
+        except:
+            _log.mark("preset_error", nm + " " + _log.exc())
 
 def _act_weapon():
     if P["weapon"] == "ammoswitch":
@@ -1637,6 +1698,7 @@ def OnAct(pObject, pEvent):
             Oracle.OracleSession._damage_attacker({"admg": P["att_dmg"]})
             _log.mark("att_dmg", P["att_dmg"])
         _preset_shields()
+        _preset_subsystems()
         if P["weapon"] != "none":
             _act_weapon()
         if P["motion"] != "none":
@@ -1826,6 +1888,15 @@ def OnSample(pObject, pEvent):
             for s in g_subs:
                 conds.append(s.GetCondition())
             _log.row("b t=%.4f s=%s" % (t, _fmt_list(conds, "%.0f")))
+        if string.find(P["rows"], "r") >= 0:
+            rq = []
+            try:
+                rep = g_pTarget.GetRepairSubsystem()
+                for s in g_subs:
+                    rq.append(rep.IsBeingRepaired(s))
+            except:
+                rq = [-1]
+            _log.row("r t=%.4f rq=%s" % (t, _fmt_list(rq, "%d")))
         if string.find(P["rows"], "c") >= 0:
             pS = g_pAttacker
             if P["sample"] == "target":
