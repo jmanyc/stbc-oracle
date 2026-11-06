@@ -28,6 +28,7 @@ python oracle/analyze.py          # report per docs/oracle/results/*.json
 | `run_oracle.py` | Python 3 driver: deploy scripts, write inputs, launch, focus, skip movies, collect, parse |
 | `capture.py` | `PrintWindow(PW_RENDERFULLCONTENT)` screenshots — BitBlt shows the 3D view black |
 | `study.py` / `analyze.py` / `scene_report.py` | the study matrix and its reductions (`scene_report.py` writes `docs/mission-scenes.md`) |
+| `native/` | optional native capture plugins (CombatTap per-hit log, Lockstep fixed-step clock, RandTap seed control, OracleAssist background running) and their build script; see `native/README.md` |
 
 The oracle directory (`--oracle-dir`, default
 `~/Documents/Star Trek Bridge Commander/bc_oracle`) is a clean BC install plus

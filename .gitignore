@@ -16,3 +16,4 @@ scorecard/dauntless_pytest_baseline_failures.txt
 # Windows harness (harness_win/_dauntless_host.py). Game asset data: never
 # committed; each machine exports its own from its own copy.
 harness_win/hull_shapes.json.gz
+oracle/native/out/

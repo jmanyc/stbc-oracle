@@ -10,7 +10,7 @@ and keeps <out>/<run>.json, <run>.grn (every GetRandomNumber: rand index, n, res
 <run>.trace (every main-stream rand(): index, caller, value) and <run>.randtap.log.
 Then compares every pair of runs: where their GetRandomNumber sequences and main rand() streams first
 differ, and whether their sampled state rows (positions, orientation, shields, status) are identical.
-The instance must contain RandTap.asi (stbc-oracle tools: randtap.c); remove it afterwards to return the
+The instance must contain RandTap.asi (oracle/native/randtap, built with oracle/native/build.sh); remove it afterwards to return the
 instance to the validated oracle setup.
 """
 import argparse
