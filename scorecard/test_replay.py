@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent / "results_mac"
+from conftest import RESULTS_MAC as ROOT
 MAX_EVENTS = 400
 
 

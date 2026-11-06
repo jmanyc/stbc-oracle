@@ -10,7 +10,8 @@ import pytest
 
 from conftest import CATALOGUE
 
-ROOT = Path(__file__).resolve().parent.parent / "results_mac" / "sweep"
+from conftest import RESULTS_MAC
+ROOT = RESULTS_MAC / "sweep"
 FACES = ("front", "rear", "top", "bottom", "left", "right")
 
 

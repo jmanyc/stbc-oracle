@@ -15,7 +15,10 @@ import pytest
 
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results.jsonl"
-CATALOGUE = HERE.parent / "results_mac" / "catalogue_galaxy_sovereign.json"
+# The original's captures: results_mac/ beside the scorecard, or ORACLE_RESULTS (raw captures stay out of git,
+# so a checkout that is not the one that recorded them points here).
+RESULTS_MAC = Path(os.environ.get("ORACLE_RESULTS") or HERE.parent / "results_mac")
+CATALOGUE = RESULTS_MAC / "catalogue_galaxy_sovereign.json"
 
 
 def pytest_sessionstart(session):

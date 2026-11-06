@@ -18,7 +18,8 @@ import sys
 import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SWEEP = os.path.join(HERE, "..", "results_mac", "sweep")
+from conftest import RESULTS_MAC
+SWEEP = str(RESULTS_MAC / "sweep")
 sys.path.insert(0, os.path.join(HERE, "..", "oracle", "reports"))
 from common import shots, xrows  # noqa: E402
 
