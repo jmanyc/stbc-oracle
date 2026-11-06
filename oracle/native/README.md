@@ -13,7 +13,7 @@ Where they are needed:
 | **CombatTap** | One log line per damage event inside the engine: impact point, radius, each subsystem damaged and by how much, shield faces, overflow. The duel summaries, the aim and torpedo reports and `analyze_tap.py` read it. | No per-hit log; telemetry still records each subsystem's condition per sample. |
 | **Lockstep** | A fixed 60 Hz virtual clock, so every game step is the same size on any host, plus mode 2, which also skips the scene draw for speed. Runs become deterministic. | Step size follows the host's frame rate. |
 | **RandTap** | Seeds and records the game's C runtime `rand()`, and records the script-level `GetRandomNumber` sequence, for replaying a fight from a seed (`harness_win/randtap_test.py`). | No seed control. |
-| **OracleAssist** | Lets the game run in the background on a Mac (CrossOver) without taking focus, the mouse or the cursor. It tells the game it is active and skips the opening movies. | The driver needs the window focused, as on Windows. |
+| **OracleAssist** | Lets the game run in the background on a Mac (CrossOver) without taking focus, the mouse or the cursor. It tells the game it is active, skips the opening movies, and keeps keys typed in other windows out of the run. | The driver needs the window focused, as on Windows. |
 
 Each plugin reads an optional `.ini` and writes a `.log` in the game folder. The header comment of each source file documents its options.
 

@@ -18,6 +18,9 @@
  *    every 1.5 s until Local.py reports "menu_ready" in oracle_boot.cfg, then never again.
  *    While injecting, a not-acquired keyboard (no real focus) reads as "no keys" rather than
  *    an error.
+ *  - Keyboard: after the menu, a keyboard read while the game window is not really the foreground
+ *    window returns no keys, so typing in other windows never reaches a run (DirectInput reads
+ *    the keyboard in background mode).
  *  - Diagnostics: counts game ticks (TopWindow::Update 0x0043b4f0, address verified on the
  *    GOG 1.1 exe) and activation messages, written to OracleAssist.log
  *    every 2 s, so a driver can tell whether the loop is running.
@@ -110,11 +113,26 @@ static HRESULT (WINAPI *o_CreateDevice)(void *, REFGUID, void **, LPUNKNOWN);
 static HRESULT (WINAPI *o_CreateDeviceEx)(void *, REFGUID, REFIID, void **, LPUNKNOWN);
 static HRESULT (WINAPI *o_DirectInputCreateEx)(HINSTANCE, DWORD, REFIID, void **, LPUNKNOWN);
 static int g_menu;
+static volatile LONG g_keys_dropped;
+
+/* After the menu, the user's typing in OTHER windows must never reach the run: the game reads the
+   keyboard with DirectInput in background mode, so on Windows it saw every key the user typed
+   elsewhere. Keys reach the game only when its window really is the foreground window. */
+static int user_elsewhere(void)
+{
+    return g_menu && g_hwnd && o_GetForegroundWindow && o_GetForegroundWindow() != g_hwnd;
+}
 
 static HRESULT WINAPI h_GetDeviceData(void *self, DWORD cb, LPDIDEVICEOBJECTDATA data, LPDWORD n, DWORD flags)
 {
     DWORD want = n ? *n : 0;
     HRESULT hr = o_GetDeviceData(self, cb, data, n, flags);
+    if (self == g_kbd && user_elsewhere())
+    {
+        if (n && *n) InterlockedIncrement(&g_keys_dropped);
+        if (n) *n = 0;
+        return DI_OK;
+    }
     if (self != g_kbd || g_menu) return hr;
     if (FAILED(hr)) { if (n) *n = 0; hr = DI_OK; }
     if (g_inject && data && n && *n < want && !(flags & DIGDD_PEEK) && cb >= sizeof(DIDEVICEOBJECTDATA_DX3))
@@ -135,6 +153,7 @@ static HRESULT WINAPI h_GetDeviceData(void *self, DWORD cb, LPDIDEVICEOBJECTDATA
 static HRESULT WINAPI h_GetDeviceState(void *self, DWORD cb, LPVOID buf)
 {
     HRESULT hr = o_GetDeviceState(self, cb, buf);
+    if (self == g_kbd && user_elsewhere()) { memset(buf, 0, cb); return DI_OK; }
     if (self != g_kbd || g_menu) return hr;
     if (FAILED(hr)) { memset(buf, 0, cb); hr = DI_OK; }
     if (g_inject && cb > DIK_ESCAPE)
@@ -253,9 +272,9 @@ static DWORD WINAPI worker(LPVOID arg)
         if ((GetTickCount() - start) / 2000 != ((GetTickCount() - start - 250) / 2000))
         {
             LONG t = g_ticks;
-            alog("%6lu ms  ticks %ld (+%ld)  swallowed %ld  cursor_blocked %ld  esc %d  real_fg=%p\n",
+            alog("%6lu ms  ticks %ld (+%ld)  swallowed %ld  cursor_blocked %ld  esc %d  real_fg=%p  keys_dropped %ld\n",
                  GetTickCount() - start, t, t - (LONG)last_ticks, g_swallowed, g_cursor_blocked,
-                 g_esc, o_GetForegroundWindow());
+                 g_esc, o_GetForegroundWindow(), g_keys_dropped);
             last_ticks = t;
         }
     }
