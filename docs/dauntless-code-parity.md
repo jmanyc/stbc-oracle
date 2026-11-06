@@ -1,8 +1,8 @@
 # Dauntless code parity: Galaxy and Sovereign combat (2026-10-16)
 
-For each rule in `docs/mechanics-reference-galaxy-sovereign.md`: what the original game does (measured), where Dauntless implements it, what that code computes, and the scorecard checks (`scorecard/results.jsonl` ids) that confirm the verdict by simulation.
+For each rule in `docs/mechanics-reference-galaxy-sovereign.md` (provisional until its captures are in `docs/results/`): what the original game does (measured), where Dauntless implements it, what that code computes, and the scorecard checks (`scorecard/results.jsonl` ids) that confirm the verdict by simulation.
 
-- **Paths:** relative to `~/Downloads/stbc/dauntless`. Line numbers are as of 2026-10-16 (uncommitted tree).
+- **Paths:** relative to the Dauntless repo root. Line numbers are as of 2026-10-16 (uncommitted tree).
 - **Verdicts:**
   - ✅ same
   - ≈ close

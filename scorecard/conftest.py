@@ -1,12 +1,13 @@
 """Scorecard plumbing: every check records (id, area, what, BC value, Dauntless value, verdict)
 to scorecard/results.jsonl. Run from the dauntless repo with its fixtures loaded as plugins:
 
-  cd ~/Downloads/stbc/dauntless
+  cd <your Dauntless checkout>          # stbc-oracle checked out beside it
   PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -p tests.conftest -p tests.oracle.conftest \\
       --rootdir=. -p no:cacheprovider -q ../stbc-oracle/scorecard
 
 Nothing in the dauntless tree is modified. BC values come from the stbc-oracle measurements
-(docs/mechanics-reference-galaxy-sovereign.md and results_mac/)."""
+(docs/mechanics-reference-galaxy-sovereign.md, provisional until its captures are in docs/results/,
+and results_mac/)."""
 import json
 import os
 from pathlib import Path

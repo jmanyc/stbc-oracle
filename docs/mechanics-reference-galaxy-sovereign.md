@@ -1,15 +1,17 @@
 # Bridge Commander combat mechanics: Galaxy and Sovereign
 
-**Status:** v1.2 (2026-10-16 02:30). All planned measurements for the Galaxy and Sovereign are in. Items marked ❓ are open questions, not pending runs.
+> **Provisional: not yet verifiable from this repo.** The captures behind these numbers are not in `docs/results/` yet; they are kept locally (`results_mac/`, `results_win/`). Until they are added, treat every number here as unverified, and don't cite it the way the bible's numbers are cited. The ✅ marks below mean measured on the original, not checkable here.
+
+**Status:** v1.2 (2026-10-16 02:30), provisional (see above). All planned measurements for the Galaxy and Sovereign are in. Items marked ❓ are open questions, not pending runs.
 
 **Source:** the original game (`stbc.exe`, GOG 1.1), measured by the stbc-oracle harness on CrossOver.
 - Lockstep mode 2 gives exact 60 Hz steps and deterministic results.
 - CombatTap records every hit inside the engine.
 - Full per-ship telemetry is recorded.
-- Each section names the oracle runs it rests on; the raw captures are kept locally (results_mac/, results_win/), and a curated set can be added under docs/results/.
+- The raw captures are kept locally (results_mac/, results_win/), not in this repo; some sections name the run they rest on. A curated set will be added under docs/results/, and this note removed then.
 
 **Legend:**
-- ✅ measured and confirmed (exact unless a tolerance is given)
+- ✅ measured on the original (exact unless a tolerance is given); not yet backed by a capture in docs/results/
 - ❓ open question
 
 **Units:**
