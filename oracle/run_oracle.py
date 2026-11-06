@@ -310,6 +310,40 @@ def _ended_cleanly(oracle_dir: Path) -> bool:
     return any(k.endswith("_on_end") for k in boot) and any(k.endswith("_flushed") and "ok=1" in v for k, v in boot.items())
 
 
+# Row kinds parse_output turns into "rows", "sub_rows", ...; every other kind is only in "raw_rows".
+PARSED_KINDS = ("a", "b", "c", "d", "e", "f", "r", "s", "h", "m")
+DOCS_RESULTS = Path(__file__).resolve().parents[1] / "docs" / "results"
+
+
+def for_docs(result: dict) -> dict:
+    """The copy of a result that goes under docs/results/ (committed, public): no hostname, no second
+    copy of params in the manifest, and raw_rows only for rows that are not already parsed."""
+    out = dict(result)
+    if isinstance(out.get("manifest"), dict):
+        out["manifest"] = {k: v for k, v in out["manifest"].items() if k not in ("host", "params")}
+    if "raw_rows" in out:
+        keep = []
+        for line in out["raw_rows"]:
+            if line.split(" ", 1)[0] in PARSED_KINDS:
+                try:
+                    parse_row(line)
+                    continue                # already in rows/sub_rows/...
+                except (ValueError, IndexError):
+                    pass                    # unparsable: the raw line is its only copy
+            keep.append(line)
+        out["raw_rows"] = keep
+    return out
+
+
+def write_result(path: Path, result: dict, indent: int | None = 1) -> None:
+    """Write a result; under docs/results/ write the for_docs() copy. results_mac/ and results_win/
+    (git-ignored) keep everything."""
+    path = Path(path)
+    if path.resolve().is_relative_to(DOCS_RESULTS):
+        result = for_docs(result)
+    path.write_text(json.dumps(result, indent=indent))
+
+
 def parse_output(oracle_dir: Path) -> dict:
     """Read oracle_out.cfg (+ oracle_out1.cfg, ... chunks) into rows by kind."""
     first = parse_cfg_section(oracle_dir / OUT_CFG, "OracleOut")
@@ -321,10 +355,10 @@ def parse_output(oracle_dir: Path) -> dict:
         sec = parse_cfg_section(path, "OracleOut")
         keys = sorted(k for k in sec if k.startswith("r") and k[1:].isdigit())
         raw_rows.extend(sec[k] for k in keys if sec[k] != "")
-    rows = {"a": [], "b": [], "c": [], "d": [], "e": [], "s": [], "h": [], "m": [], "f": [], "r": []}
+    rows = {k: [] for k in PARSED_KINDS}
     for line in raw_rows:
         kind = line.split(" ", 1)[0]
-        if kind not in ("a", "b", "c", "d", "e", "f", "r", "s", "h", "m"):
+        if kind not in PARSED_KINDS:
             continue                    # newer row kinds (telemetry, catalogue, probe...) stay raw
         try:
             d = parse_row(line)
@@ -736,7 +770,7 @@ def main(argv=None) -> int:
     print(summarise(result))
     if a.out:
         a.out.parent.mkdir(parents=True, exist_ok=True)
-        a.out.write_text(json.dumps(result, indent=1))
+        write_result(a.out, result)
         print(f"wrote {a.out}")
     return 0 if result["done"] else 1
 
