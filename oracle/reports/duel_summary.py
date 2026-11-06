@@ -33,6 +33,9 @@ HIT_REUSE_S = 0.5
 ALIGN_DEG = 10.0             # the SDK FireScript's accurate-torpedo window
 CURVE_STEP_S = 15.0
 RX = re.compile(r"duel_(\w+?)_enemy([\d.]+)_vs_(\w+?)_player([\d.]+)_r(\d+)_a(\d+)")
+# A human-flown Dauntless fight (DAUNTLESS_COMBAT_RECORD): no range or bearing, the enemy's AI level
+# (-1 when the recorder could not read it) and the recording's start time.
+RX_HUMAN = re.compile(r"duel_(\w+?)_enemy(-?[\d.]+)_vs_(\w+?)_player_human_(\d{8}-\d{6})")
 HULL_MAX = {}                # class -> hull max, filled from captures that log it (inference fallback)
 
 
@@ -466,7 +469,7 @@ def _summarize_dn(d, path, m):
         ships[tag_role[tag]]["curve"] = _curve(pts, t_end)
 
     return dict(schema=SCHEMA, source="dn", file=_name(path), enemy=d["enemy"], player=d["player"],
-                level=float(d["level"]), angle=int(d["angle"]), winner=winner, winner_role=winner_role,
+                level=float(d["level"]), angle=int(d["angle"]) if d.get("angle") is not None else None, winner=winner, winner_role=winner_role,
                 ended=winner is not None,
                 t_end=round(t_end, 3), attribution="exact", ships=ships)
 
@@ -484,9 +487,13 @@ def load_json(path):
 
 def summarize(path):
     m = RX.search(os.path.basename(path))
-    if not m:
-        return None
-    meta = {"enemy": m.group(1), "player": m.group(3), "level": float(m.group(2)), "angle": int(m.group(6))}
+    if m:
+        meta = {"enemy": m.group(1), "player": m.group(3), "level": float(m.group(2)), "angle": int(m.group(6))}
+    else:
+        m = RX_HUMAN.search(os.path.basename(path))
+        if not m:
+            return None
+        meta = {"enemy": m.group(1), "player": m.group(3), "level": float(m.group(2)), "angle": None}
     try:
         d = load_json(path)
     except Exception:
