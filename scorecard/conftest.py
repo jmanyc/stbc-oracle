@@ -71,6 +71,14 @@ def catalogue():
     return _CAT_CACHE["all"]
 
 
+def catalogue_for(cls):
+    """catalogue()[cls], skipping the calling test when no capture holds that class (results_mac stays out of git)."""
+    cat = catalogue()
+    if cls not in cat:
+        pytest.skip("no catalogue capture for %s (%s)" % (cls, CATALOGUE.name))
+    return cat[cls]
+
+
 def _catalogue_one(path):
     cat = json.loads(path.read_text())
     p = cat.get("params") or {}

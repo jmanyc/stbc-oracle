@@ -3,7 +3,7 @@ subsystem (critical +6, weapon / weapon system / shield generator +5, impulse +3
 -0.0005 per HP to disable and to destroy). Both games run this same SDK code; what differs is its inputs
 (DisabledPercentage, MaxCondition, IsCritical). Ranking for a Galaxy seen from a Sovereign 100 GU ahead,
 fresh ship: the original game's values (catalogue) vs Dauntless's live values."""
-from conftest import catalogue
+from conftest import catalogue_for, catalogue
 
 TYPE_RATING = (("CT_WEAPON_SYSTEM", 5.0), ("CT_WEAPON", 5.0), ("CT_SHIELD_SUBSYSTEM", 5.0),
                ("CT_CLOAKING_SUBSYSTEM", 4.0), ("CT_IMPULSE_ENGINE_SUBSYSTEM", 3.0), ("CT_HULL_SUBSYSTEM", -200.0))
@@ -17,7 +17,7 @@ def _rating(critical, max_c, dp, cond, hittable, sys_rating):
 def test_ai_target_ranking(oracle, record):
     import App
     s = oracle(attacker="Sovereign", target="Galaxy", range_gu=100.0)
-    bc = catalogue()["Galaxy"]
+    bc = catalogue_for("Galaxy")
     from engine.appc.combat import _iter_subsystems
     rows = []
     for x in list(_iter_subsystems(s.tgt)):

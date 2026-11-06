@@ -38,6 +38,8 @@ ARCS150 = CATALOGUE.parent / "catalogue_arcs_r150.json"
 def test_arcs(oracle, record, cls, radius):
     if radius != 50.0 and not ARCS150.exists():
         pytest.skip("no 150 GU arc capture")
+    if not CATALOGUE.exists():
+        pytest.skip("no catalogue capture (%s)" % CATALOGUE.name)
     import App
     from engine.appc import weapon_subsystems as W
     s = oracle(attacker="Sovereign" if cls == "Galaxy" else "Galaxy", target=cls, range_gu=3000.0)

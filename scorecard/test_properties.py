@@ -1,7 +1,7 @@
 """P: every subsystem's live settings in Dauntless vs the original game's catalogue dump."""
 import pytest
 
-from conftest import catalogue
+from conftest import catalogue_for, catalogue
 
 FIELDS = [  # (BC getter, Dauntless getter, label, kind)
     ("GetMaxCondition", "GetMaxCondition", "HP", float),
@@ -27,7 +27,7 @@ def _walk(ship):
 def test_subsystem_settings(oracle, record, cls):
     s = oracle(attacker="Sovereign" if cls == "Galaxy" else "Galaxy", target=cls, range_gu=57.0)
     live = _walk(s.tgt)
-    bc = catalogue()[cls]
+    bc = catalogue_for(cls)
     missing = sorted(set(bc) - set(live))
     record(f"P0-{cls}", "Ship data", f"{cls}: subsystems present", f"{len(bc)}", f"{len(bc) - len(missing)}",
            "match" if not missing else "wrong", "missing: " + ", ".join(missing) if missing else "")

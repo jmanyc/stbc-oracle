@@ -4,6 +4,13 @@ import pytest
 from conftest import grade
 
 
+def _damageable(combat, ship):
+    """The subsystems a weapon footprint can damage: combat._weapon_damageable_subsystems where Dauntless has it
+    (combat-ai-parity), else every subsystem _iter_subsystems walks."""
+    fn = getattr(combat, "_weapon_damageable_subsystems", None)
+    return list(fn(ship)) if fn is not None else list(combat._iter_subsystems(ship))
+
+
 def _sub(ship, name):
     from engine.appc.combat import _iter_subsystems
     for x in _iter_subsystems(ship):
@@ -116,7 +123,7 @@ def test_overflow(oracle, record):
     s = oracle(attacker="Sovereign", target="Galaxy", range_gu=3000.0)
     _no_repair(s.tgt)
     sen = _sub(s.tgt, "Sensor_Array")
-    for x in combat._weapon_damageable_subsystems(s.tgt):
+    for x in _damageable(combat, s.tgt):
         x.SetCondition(x.GetMaxCondition())
     sen.SetCondition(100.0)
     h0 = s.tgt.GetHull().GetCondition()

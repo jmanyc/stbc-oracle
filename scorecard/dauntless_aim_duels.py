@@ -65,8 +65,12 @@ def _seed_hull_box(ship, host_loop):
     """The live game caches each ship's hull AABB at realize time (host_loop._cache_shield_hull_box, from the
     renderer's model_aabb) and picks a hit's shield FACE from it; headless there is no renderer, so the face fell
     back to the raw-axis rule and a flat hull's dorsal/ventral hits were billed to front/rear (an Akira's front
-    shield read < 70% 82% of a fight vs the original's 11%). Same AABB from the NIF's drawn shapes."""
-    from engine.appc import hull_line_of_sight as hl
+    shield read < 70% 82% of a fight vs the original's 11%). Same AABB from the NIF's drawn shapes.
+    Needs engine/appc/hull_line_of_sight.py (Dauntless combat-ai-parity); skipped on a Dauntless without it."""
+    try:
+        from engine.appc import hull_line_of_sight as hl
+    except ImportError:
+        return
     import _dauntless_host as h
     path = hl._nif_path(ship)
     if not path:
@@ -171,6 +175,7 @@ def test_record_aim_duel(oracle, monkeypatch, enemy, player, lv, angle, rep):
     # Optional (AIM_DUEL_TRACE_FS=1): per FireScript node and weapon system, calls to FireSystemAtTarget and passed
     # CheckGoodShot per game second -- the Dauntless twin of CombatTap's FSA rows.
     fs_counts = {}
+    # Needs the compiled FireScript node (Dauntless combat-ai-parity).
     if _os.environ.get("AIM_DUEL_TRACE_FS"):
         from engine.appc.optimized_fire_script import CompiledFireScriptMixin as _CFS
 
@@ -512,11 +517,15 @@ def test_record_aim_duel(oracle, monkeypatch, enemy, player, lv, angle, rep):
         for fn, f0 in fac_orig.items():
             setattr(App, fn, f0)
         # The fight is over: free both AI trees as a mission end deletes its ships (engine/appc/ai.py
-        # destroy_ai_tree) -- else the next duel's same-named ships inherit stale condition registries.
-        from engine.appc.ai import destroy_ai_tree
+        # destroy_ai_tree) -- else the next duel's same-named ships inherit stale condition registries. A Dauntless
+        # without destroy_ai_tree (before combat-ai-parity) keeps the trees, as its own mission ends do.
+        try:
+            from engine.appc.ai import destroy_ai_tree
+        except ImportError:
+            destroy_ai_tree = None
         for ship in (s.atk, s.tgt):
             ai = ship.__dict__.get("_ai")
-            if ai is not None:
+            if ai is not None and destroy_ai_tree is not None:
                 destroy_ai_tree(ai)
     (OUT / f"{name}.json").write_text(json.dumps(dict(
         enemy=enemy, player=player, level=lv, angle=angle, winner=winner, winner_role=winner_role, t_end=s.t,

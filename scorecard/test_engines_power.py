@@ -8,6 +8,13 @@ from conftest import grade
 FAR = 3000.0          # attacker far from the target so manoeuvres never collide
 
 
+def _damageable(combat, ship):
+    """The subsystems a weapon footprint can damage: combat._weapon_damageable_subsystems where Dauntless has it
+    (combat-ai-parity), else every subsystem _iter_subsystems walks."""
+    fn = getattr(combat, "_weapon_damageable_subsystems", None)
+    return list(fn(ship)) if fn is not None else list(combat._iter_subsystems(ship))
+
+
 def _sub(ship, name):
     from engine.appc.combat import _iter_subsystems
     for x in _iter_subsystems(ship):
@@ -284,7 +291,7 @@ def test_phaser_low_no_subsystem(oracle, record):
     import App
     from engine.appc import combat
     s = oracle(attacker="Sovereign", target="Galaxy", range_gu=3000.0)
-    subs = list(combat._weapon_damageable_subsystems(s.tgt))
+    subs = list(_damageable(combat, s.tgt))
     def clear(p):
         for x in subs:
             w = combat._subsystem_world_position(s.tgt, x)
@@ -356,6 +363,8 @@ def test_batteries_flat(oracle, record, case):
     _no_repair(s.atk)
     _set_controls(s.atk, level)
     ps = s.atk.GetPowerSubsystem()
+    if not hasattr(s.atk.GetImpulseEngineSubsystem(), "_handout_fed"):
+        pytest.skip("needs the power hand-out model (Dauntless combat-ai-parity: _handout_fed)")
     ps.SetCondition(ps.GetMaxCondition() * core)
     ps.SetMainBatteryPower(0.0)
     ps.SetBackupBatteryPower(0.0)
