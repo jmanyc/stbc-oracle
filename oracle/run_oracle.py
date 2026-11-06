@@ -183,15 +183,20 @@ def _assisted(oracle_dir: Path) -> bool:
 
 
 def check_game_path(oracle_dir: Path) -> None:
-    """Windows instance copies: options.cfg 'Game Path=' must name this very folder, or the game may
-    read another install's data (the Windows PC has a partial C:\\GOG Games install at the default)."""
+    """Windows: warn when options.cfg 'Game Path=' names another folder than this copy. The game may
+    then read that install's data instead (a partial install at the default path did this to one
+    instance copy); a normal single copy whose Game Path is the install it came from still runs."""
     if IS_MAC:
         return
-    raw = (oracle_dir / "options.cfg").read_bytes().decode("latin-1")
+    try:
+        raw = (oracle_dir / "options.cfg").read_bytes().decode("latin-1")
+    except OSError:
+        return
     m = re.search(r"^Game Path=(.*?)\s*$", raw, re.M)
     if m and Path(m.group(1)).resolve() != oracle_dir.resolve():
-        raise SystemExit(f"options.cfg Game Path={m.group(1)} is not this instance folder {oracle_dir}"
-                         " - fix it (oracle/batch.py setup does) before launching")
+        print(f"warning: options.cfg Game Path={m.group(1)} is not this folder {oracle_dir}; the game"
+              " may read that install's data (oracle/batch.py setup points instance copies at themselves)",
+              flush=True)
 
 
 def _pid_alive(pid: int) -> bool:
