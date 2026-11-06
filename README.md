@@ -129,6 +129,23 @@ target at act time (`count` also logs `ET_ENVIRONMENT_DAMAGE` events;
 (`[OracleBoot]` mission, `[OracleHook]` startup) — the first thing to read
 when a run does nothing.
 
+A result written under `docs/results/` (committed, public) is a trimmed copy
+(`run_oracle.for_docs`): no hostname, no second copy of `params` in the
+manifest, and `raw_rows` only for row kinds that are not already parsed. A
+result written anywhere else, such as the ignored `results_mac/` / `results_win/`, keeps everything.
+
+## Settings (environment)
+
+| Variable | Used by | Meaning |
+|---|---|---|
+| `DAUNTLESS_ORACLE_DIR` | `run_oracle.py` | the game copy to run (default: the platform's `bc_oracle` / CrossOver bottle path) |
+| `ORACLE_BOTTLE` | `run_oracle.py` (Mac) | CrossOver bottle name (default `BC Oracle`) |
+| `ORACLE_SDK_HARDPOINTS` | `run_oracle.py --hp-patch`, `reports/aim_bank.py`, `reports/export_hittable_tables.py` | the SDK's `scripts/ships/Hardpoints` folder (Windows default: the SDK beside the oracle copy; no default on the Mac) |
+| `ORACLE_RESULTS` | `scorecard/`, `reports/export_hittable_tables.py` | the folder of captures (default `results_mac/`) |
+| `DAUNTLESS_ROOT` | `reports/rating_replay.py` | a built Dauntless checkout, for ship meshes |
+
+`export_hittable_tables.py` writes into `<results>/exports/` unless given `--out-dir`; it never writes into a Dauntless checkout by default.
+
 ## AI duel comparison (original vs Dauntless)
 
 | | |

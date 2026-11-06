@@ -1,6 +1,6 @@
 # Dauntless combat implementation map (2026-10-16)
 
-This is the input for the scorecard. Every claim comes from a read-only code survey of `~/Downloads/stbc/dauntless`, citing file:line. One in-memory check built a Galaxy and dumped its live subsystem fields. Paths are relative to the dauntless repo.
+This is the input for the scorecard. Every claim comes from a read-only code survey of a Dauntless checkout, citing file:line. One in-memory check built a Galaxy and dumped its live subsystem fields. Paths are relative to the dauntless repo.
 
 ## Headline: hardpoint fields are dropped for weapons and the warp core (verified live)
 

@@ -26,13 +26,15 @@ import json, math, os, re, sys, bisect
 sys.path.insert(0, os.path.dirname(__file__))
 import aim_reconstruct as AR
 
-DAUNTLESS = os.path.expanduser("~/Downloads/stbc/dauntless")
+DAUNTLESS = os.environ.get("DAUNTLESS_ROOT")     # a built Dauntless checkout (build/python, game/data)
 CATALOGUE = os.path.join(os.path.dirname(__file__), "..", "..", "results_mac", "hittable_r20_57_150.json")
 TYPE_RATING = (("WeaponSystem", 5.0), ("Weapon", 5.0), ("ShieldClass", 5.0), ("CloakingSubsystem", 4.0),
                ("ImpulseEngineSubsystem", 3.0), ("HullClass", -200.0))
 
 
 def _mesh(cls):
+    if not DAUNTLESS:
+        sys.exit("rating_replay.py reads ship meshes through Dauntless: set DAUNTLESS_ROOT to a built checkout")
     sys.path.insert(0, os.path.join(DAUNTLESS, "build", "python"))
     import numpy as np, trimesh
     import _dauntless_host as h

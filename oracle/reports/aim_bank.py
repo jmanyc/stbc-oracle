@@ -16,7 +16,7 @@ import json, math, os, re, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import aim_reconstruct as AR
 
-HARDPOINTS = os.path.expanduser("~/Downloads/stbc/dauntless/sdk/Build/scripts/ships/Hardpoints")
+HARDPOINTS = os.environ.get("ORACLE_SDK_HARDPOINTS")       # the SDK's scripts/ships/Hardpoints folder
 CATALOGUE = os.path.join(os.path.dirname(__file__), "..", "..", "results_mac", "hittable_r20_57_150.json")
 CAT_TAG = {"Galaxy": "T", "Sovereign": "A"}
 
@@ -27,6 +27,8 @@ def _floats(s):
 
 def banks(cls):
     """Energy-weapon emitters in hardpoint order: name -> dict(mount, fwd, up, L, W, a0, a1)."""
+    if not HARDPOINTS:
+        sys.exit("aim_bank.py reads the SDK hardpoint sources: set ORACLE_SDK_HARDPOINTS to scripts/ships/Hardpoints")
     src = open(os.path.join(HARDPOINTS, cls.lower() + ".py")).read()
     out = []
     for m in re.finditer(r'^(\w+) = App\.(PhaserProperty|TractorBeamProperty|PulseWeaponProperty)_Create\("([^"]+)"\)', src, re.M):

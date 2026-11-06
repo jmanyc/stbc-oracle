@@ -83,9 +83,11 @@ def deploy_scripts(oracle_dir: Path) -> None:
             pyc.unlink()
 
 
-SDK_HARDPOINTS = Path(os.environ.get("ORACLE_SDK_HARDPOINTS",
-    str(Path.home() / "Downloads/stbc/dauntless/sdk/Build/scripts/ships/Hardpoints") if IS_MAC
-    else "C:/Users/user/Documents/Star Trek Bridge Commander/sdk/Build/scripts/ships/Hardpoints"))
+# The SDK's ships/Hardpoints sources (read by --hp-patch). Set ORACLE_SDK_HARDPOINTS; the Windows default is the
+# SDK copy beside the oracle install. The Mac has no default.
+_SDK_HP = os.environ.get("ORACLE_SDK_HARDPOINTS") or (
+    None if IS_MAC else "C:/Users/user/Documents/Star Trek Bridge Commander/sdk/Build/scripts/ships/Hardpoints")
+SDK_HARDPOINTS = Path(_SDK_HP) if _SDK_HP else None
 
 
 def deploy_hp_patch(oracle_dir: Path, spec: str):
@@ -97,6 +99,9 @@ def deploy_hp_patch(oracle_dir: Path, spec: str):
     template's block from ``LoadPropertySet`` so the ship is built without it.
     Returns a restore() that removes the .py and puts the stock .pyc back."""
     hp, items = spec.split(":", 1)
+    if SDK_HARDPOINTS is None or not (SDK_HARDPOINTS / f"{hp}.py").exists():
+        raise SystemExit(f"--hp-patch needs the SDK hardpoint source {hp}.py: set ORACLE_SDK_HARDPOINTS to the SDK's"
+                         f" scripts/ships/Hardpoints folder (now {SDK_HARDPOINTS})")
     src = (SDK_HARDPOINTS / f"{hp}.py").read_text(encoding="latin-1")
     pulse_vars = re.findall(r"^(\w+) = App\.PulseWeaponProperty_Create\(", src, re.M)
     extra = []
